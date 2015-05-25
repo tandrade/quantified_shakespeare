@@ -2,76 +2,115 @@ import xml.dom.minidom as minidom
 import pandas as pd
 import matplotlib.pyplot as mpl
 
-henry_iv = minidom.parse("1H4.xml")
+def clean_up_text(str):
+  return str.strip()
 
-## First step: parse the characters 
-'''
-all_chars = []
-# find lists of characters
-cast_lists = henry_iv.getElementsByTagName("listPerson")
-for cast_list in cast_lists:
-  # find the people in those lists 
-  char_nodes = cast_list.getElementsByTagName("person")
-  for char_node in char_nodes:
-    # all major characters will have the 'name' node, can get the data from there
-    # minor characters don't follow this convention -- skipping them
-    names = char_node.getElementsByTagName("name")
-    if names:
-      all_chars.append(names[0].childNodes[0].data)
-'''
+class Play:
+  def __init__(self, xml_file):
+    self.data = minidom.parse(xml_file)    
 
-### Plot entrances by word
-def handle_stage_events(e, chars_on_stage):
-  e_type = e.getAttribute("type")
-  update_value = 0
-  chars = [char for char in e.getAttribute("who").split("#")]
-  for c in chars:
-    if c == "" or c.isupper():
-      chars.remove(c)
-  if e_type == "entrance":
-    for char in chars:
-      if char.strip() not in chars_on_stage:
-        chars_on_stage.add(char.strip())
+class CharsOnStage():
+  def __init__(self, play):
+    self.play = play.data
+    self._chars_on_stage = set() # who is on stage at any time 
+    self._total_words = 0
+    self.data = [] # results of calculation stored here
+    self.calculate()
+
+  def _handle_stage_events(self, e):
+    e_type = e.getAttribute("type")
+    update_value = 0
+    chars = [char for char in e.getAttribute("who").split("#") if char != "" and not char.isupper()]
+    if e_type == "entrance":
+      for char in chars:
+        if clean_up_text(char) not in self._chars_on_stage:
+          self._chars_on_stage.add(clean_up_text(char))
+          update_value += 1
+    if e_type == "exit":
+      for char in chars:
+        if clean_up_text(char) in self._chars_on_stage:
+          self._chars_on_stage.remove(clean_up_text(char))
+          update_value -= 1
+    return update_value
+
+  def _handle_speech(self, e):
+    char = e.getAttribute("who")[1:] # remove hashtag
+    update_value = 0
+    if char and char != "" and not char.isupper():
+      if clean_up_text(char) not in self._chars_on_stage:
+        self._chars_on_stage.add(clean_up_text(char))
         update_value += 1
-  if e_type == "exit":
-    for char in chars:
-      if char.strip() in chars_on_stage:
-        chars_on_stage.remove(char.strip())
-        update_value -= 1
-  return chars_on_stage, update_value
+    if len(e.getElementsByTagName("ab")) > 0:
+      wds = len(e.getElementsByTagName("ab")[0].getElementsByTagName("w"))
+      self._total_words += wds
+    return update_value
 
+  def calculate(self):
+    acts = self.play.getElementsByTagName("div2")
+    totals = []
+    for act in acts:
+      self._chars_on_stage = set() # reset who is on stage every act
+      total_chars = 0
+      actions = act.childNodes
+      for action in actions:
+        update = 0
+        if action.nodeValue != "\n" and action.nodeValue != " \n":
+          try: 
+            if action.tagName == "stage":
+              update = self._handle_stage_events(action)
+            if action.tagName == "sp":
+              update = self._handle_speech(action)
+          except AttributeError:
+            print action.nodeValue # should not be called: log the issue
+        if update != 0:
+          total_chars += update
+          if total_chars != 0:
+            self.data.append([total_chars, self._total_words])
+all_plays = [
+"1H4.xml",
+"1H6.xml",
+"2H4.xml",
+"2H6.xml",
+"3H6.xml",
+"Ado.xml",
+"Ant.xml",
+"AWW.xml",
+"AYL.xml",
+"Cor.xml",
+"Cym.xml",
+"Err.xml",
+"H5.xml",
+"H8.xml",
+"Ham.xml",
+"JC.xml",
+"Jn.xml",
+"LLL.xml",
+"Lr.xml",
+"Luc.xml",
+"Mac.xml",
+"MM.xml",
+"MND.xml",
+"MV.xml",
+"Oth.xml",
+"Per.xml",
+"PhT.xml",
+"R2.xml",
+"R3.xml",
+"Rom.xml",
+"Shr.xml",
+"Son.xml",
+"TGV.xml",
+"Tim.xml",
+"Tit.xml",
+"Tmp.xml",
+"TNK.xml",
+"TN.xml",
+"Tro.xml",
+"Ven.xml",
+"Wiv.xml",
+"WT.xml",
+]
 
-def handle_speech(e, total_words, chars_on_stage):
-  char = e.getAttribute("who")[1:] # remove hashtag
-  update_value = 0
-  if char and char != "" and not char.isupper():
-    if char.strip() not in chars_on_stage:
-      chars_on_stage.add(char.strip())
-      update_value += 1
-  wds = len(e.getElementsByTagName("ab")[0].getElementsByTagName("w"))
-  total_words += wds
-  return total_words, chars_on_stage, update_value
-
-acts = henry_iv.getElementsByTagName("div2")
-total_words = 0
-totals = []
-for act in acts:
-  chars_on_stage = set()
-  total_chars = 0
-  actions = act.childNodes
-  for action in actions:
-    update = 0
-    if action.nodeValue != "\n":
-      if action.tagName == "stage":
-        chars_on_stage, update = handle_stage_events(action, chars_on_stage)
-      if action.tagName == "sp":
-        total_words, chars_on_stage, update = handle_speech(action, total_words, chars_on_stage)
-    if update != 0:
-      total_chars += update
-      if total_chars != 0:
-        totals.append([total_chars, total_words])
-
-df = pd.DataFrame(totals, columns=["total_chars", "total_words"])
-df.plot(x="total_words", y="total_chars")
-mpl.show()
-
+for play in all_plays: 
+  print play
+  CharsOnStage(Play(play))
