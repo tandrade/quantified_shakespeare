@@ -1,6 +1,7 @@
 import xml.dom.minidom as minidom
 import pandas as pd
 import matplotlib.pyplot as mpl
+from ggplot import *
 
 def clean_up_text(str):
   return str.strip()
@@ -65,52 +66,75 @@ class CharsOnStage():
         if update != 0:
           total_chars += update
           if total_chars != 0:
-            self.data.append([total_chars, self._total_words])
+            self.data.append([self._total_words, total_chars])
+
+
+class Display():
+
+  title_column_name = "title"
+
+  def __init__(self, x_label, y_label):
+    self.y_label = y_label
+    self.x_label = x_label
+    self.agg_data = []
+
+  # note: assumes two variables - x as first, y as second
+  def add_data(self, data, label):
+    self.agg_data += [[d[0], d[1], label] for d in data]
+
+  def display(self, max_x=None, max_y=None):
+    df = pd.DataFrame(self.agg_data, columns=[self.x_label, self.y_label, self.title_column_name])
+    print ggplot(df, aes(x = self.x_label, y=self.y_label)) + geom_point()
+    #TODO: call ggplot, facet on the title column
+    #FIXME: ggplot's bar plot is broken because of changes to pandas API
+
+
 all_plays = [
 "1H4.xml",
-"1H6.xml",
-"2H4.xml",
-"2H6.xml",
-"3H6.xml",
-"Ado.xml",
-"Ant.xml",
-"AWW.xml",
-"AYL.xml",
-"Cor.xml",
-"Cym.xml",
-"Err.xml",
-"H5.xml",
-"H8.xml",
-"Ham.xml",
-"JC.xml",
-"Jn.xml",
-"LLL.xml",
-"Lr.xml",
-"Luc.xml",
-"Mac.xml",
-"MM.xml",
-"MND.xml",
-"MV.xml",
-"Oth.xml",
-"Per.xml",
-"PhT.xml",
-"R2.xml",
-"R3.xml",
-"Rom.xml",
-"Shr.xml",
-"Son.xml",
-"TGV.xml",
-"Tim.xml",
-"Tit.xml",
-"Tmp.xml",
-"TNK.xml",
-"TN.xml",
-"Tro.xml",
-"Ven.xml",
-"Wiv.xml",
-"WT.xml",
+# "2H4.xml",
+# "2H6.xml",
+# "3H6.xml",
+# "Ado.xml",
+# "Ant.xml",
+# "AWW.xml",
+# "AYL.xml",
+# "Cor.xml",
+# "Cym.xml",
+# "Err.xml",
+# "H5.xml",
+# "H8.xml",
+# "Ham.xml",
+# "JC.xml",
+# "Jn.xml",
+# "LLL.xml",
+# "Lr.xml", 
+# "Luc.xml",
+# "Mac.xml",
+# "MM.xml",
+# "MND.xml",
+# "MV.xml",
+# "Oth.xml",
+# "Per.xml",
+# "PhT.xml",
+# "R2.xml",
+# "R3.xml",
+# "Rom.xml",
+# "Shr.xml",
+# "Son.xml",
+# "TGV.xml",
+# "Tim.xml",
+# "Tit.xml",
+# "Tmp.xml",
+# "TNK.xml",
+# "TN.xml",
+# "Tro.xml",
+# "Ven.xml",
+# "Wiv.xml",
+# "WT.xml",
 ]
 
+d = Display("total_words", "chars_on_stage")
 for play in all_plays: 
-  print play
-  CharsOnStage(Play(play))
+  c = CharsOnStage(Play(play))
+  d.add_data(c.data, play)
+  d.display()
