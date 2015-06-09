@@ -8,6 +8,7 @@ class Play:
 
 class Display():
   title_column_name = "title"
+  file_column_name = "filename"
 
   def __init__(self, x_label, y_label, x_max=None, y_max=None, x_display="", y_display=""):
     self.y_label = y_label
@@ -19,8 +20,8 @@ class Display():
     self.agg_data = []
 
   # note: assumes two variables - x as first, y as second
-  def add_data(self, data, label):
-    self.agg_data += [[d[0], d[1], label] for d in data]
+  def add_data(self, data, filename, label):
+    self.agg_data += [[d[0], d[1], filename, label] for d in data]
 
   # removing duplicate x, value pairs: take the last chronological value, skip 0s
   # TODO: is there a more efficient way to do this?
@@ -38,7 +39,8 @@ class Display():
 
   def display(self, max_x=None, max_y=None):
     self._clean_data()
-    df = pd.DataFrame(self.agg_data, columns=[self.x_label , self.y_label, self.title_column_name])
+    df = pd.DataFrame(self.agg_data, columns=[self.x_label , self.y_label, self.file_column_name,
+                                              self.title_column_name])
     gg = ggplot(aes(x = self.x_label, ymin=0, ymax=self.y_label), data=df) + geom_area()
     if self.x_max:
       gg = gg + xlim(0, self.x_max)
