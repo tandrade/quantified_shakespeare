@@ -6,6 +6,7 @@ class Play:
   def __init__(self, xml_file):
     self.data = minidom.parse(xml_file)
 
+#FIXME: schema has changed
 class Display():
   title_column_name = "title"
   file_column_name = "filename"
