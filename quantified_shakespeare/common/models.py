@@ -3,8 +3,10 @@ import pandas as pd
 from ggplot import *
 
 class Play:
-  def __init__(self, xml_file):
-    self.data = minidom.parse(xml_file)
+    def __init__(self, xml_file, title, genre):
+        self.data = minidom.parse(xml_file)
+        self.title = title
+        self.genre = genre
 
 
 class DataAssembler():
