@@ -36,27 +36,28 @@ class CharsOnStage():
             self._total_words += wds
         return update_value
 
+    # FIXME: action_i looks incorrect
     def calculate(self):
-        acts = self.play.getElementsByTagName("div2")
+        scenes = self.play.getElementsByTagName("div2")
         totals = []
-        for i, act in enumerate(acts):
+        for scene_i, scene in enumerate(scenes):
             self._chars_on_stage = set() # reset who is on stage every act
             total_chars = 0
-            actions = act.childNodes
-            for j, action in enumerate(actions):
+            actions = scene.childNodes
+            for action_i, action in enumerate(actions):
                 update = 0
-                type = ""
+                node_type = ""
                 if action.nodeValue != "\n" and action.nodeValue != " \n":
                     try:
                         if action.tagName == "stage":
                             update = self._handle_stage_events(action)
-                            type = "stage"
+                            node_type = "stage"
                         if action.tagName == "sp":
                             update = self._handle_speech(action)
-                            type = "speech"
+                            node_type = "speech"
                     except AttributeError:
                         print action.nodeValue # should not be called: log the issue
                 if update != 0:
                     total_chars += update
                     if total_chars != 0:
-                        self.data.append([j, i, type, self._total_words, total_chars])
+                        self.data.append([action_i, scene_i, node_type, self._total_words, total_chars])

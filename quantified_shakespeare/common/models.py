@@ -6,7 +6,22 @@ class Play:
   def __init__(self, xml_file):
     self.data = minidom.parse(xml_file)
 
-#FIXME: schema has changed
+
+class DataAssembler():
+    def __init__(self, col_names):
+        self.df = None
+        self._agg_data = []
+        self.column_names = col_names
+
+    def add_data_to_parse(self, data, play_label):
+        self._agg_data += [d + [play_label] for d in data]
+
+    def create_matrix(self):
+        self.column_names.append("play_label")
+        self.matrix = pd.DataFrame(self._agg_data, columns=self.column_names)
+
+
+#TODO: move data assembly logic out of this class -- should be in DataAssembler
 class Display():
   title_column_name = "title"
   file_column_name = "filename"
