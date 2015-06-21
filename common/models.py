@@ -1,5 +1,6 @@
 import xml.dom.minidom as minidom
 import pandas as pd
+import vincent
 from ggplot import *
 
 class Play:
@@ -10,6 +11,8 @@ class Play:
 
 
 class DataAssembler():
+    play_column_name = "play_label"
+
     def __init__(self, col_names):
         self.df = None
         self._agg_data = []
@@ -19,54 +22,35 @@ class DataAssembler():
         self._agg_data += [d + [play_label] for d in data]
 
     def create_matrix(self):
-        self.column_names.append("play_label")
+        self.column_names.append(self.play_column_name)
         self.matrix = pd.DataFrame(self._agg_data, columns=self.column_names)
 
 
-#TODO: move data assembly logic out of this class -- should be in DataAssembler
-class Display():
-  title_column_name = "title"
-  file_column_name = "filename"
+class FacetedLineChart():
 
-  def __init__(self, x_label, y_label, x_max=None, y_max=None, x_display="", y_display=""):
-    self.y_label = y_label
-    self.x_label = x_label
-    self.x_max = x_max
-    self.y_max = y_max
-    self.x_display = x_display
-    self.y_display = y_display
-    self.agg_data = []
+    def __init__(self, df, x_col, y_col, facet_field):
+        self.df = df
+        self.x_col = x_col
+        self.y_col = y_col
+        self.to_facet_on = facet_field
 
-  # note: assumes two variables - x as first, y as second
-  def add_data(self, data, filename, label):
-    self.agg_data += [[d[0], d[1], filename, label] for d in data]
-
-  # removing duplicate x, value pairs: take the last chronological value, skip 0s
-  # TODO: is there a more efficient way to do this?
-  def _clean_data(self):
-    prev_x = 0
-    cleaned_data = []
-    for row in list(reversed(self.agg_data)):
-      if row[0] == 0:
-        continue
-      if row[0] != prev_x:
-        cleaned_data += [row]
-      prev_x = row[0]
-    self.agg_data = list(reversed(cleaned_data))
+    def display(self, max_x=None, max_y=None):
+        gg = ggplot(aes(x = self.x_col, ymin=0, ymax=self.y_col), data=self.df) + geom_area()
+        if max_x:
+            gg = gg + xlim(0, max_x)
+        if max_y:
+            gg = gg + ylim(0, max_y)
+        gg = gg + facet_grid(self.to_facet_on)
 
 
-  def display(self, max_x=None, max_y=None):
-    self._clean_data()
-    df = pd.DataFrame(self.agg_data, columns=[self.x_label , self.y_label, self.file_column_name,
-                                              self.title_column_name])
-    gg = ggplot(aes(x = self.x_label, ymin=0, ymax=self.y_label), data=df) + geom_area()
-    if self.x_max:
-      gg = gg + xlim(0, self.x_max)
-    if self.y_max:
-      gg = gg + ylim(0, self.y_max)
-    if self.x_display:
-      gg = gg + xlab(self.x_display)
-    if self.y_display:
-      gg = gg + ylab(self.y_display)
-    gg = gg + facet_grid(self.title_column_name)
-    print gg
+class BarGraphDisplay():
+    def __init__(self, df, x_col, y_col):
+        self.df = df
+        self.x_col = x_col
+        self.y_col = y_col
+        self.json_name = "bar.json"
+        self.output_html_name = "test.html"
+
+    def display(self):
+        bar = vincent.Bar(list(self.df[self.x_col]), list(self.df[self.y_col]))
+        bar.to_json(self.json_name, html_out=True, html_path=self.output_html_name)
