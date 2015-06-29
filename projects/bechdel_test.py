@@ -1,7 +1,7 @@
 class BechdelTest():
 
-    male = "M"
-    female = "F"
+    male = 1
+    female = 2
 
     def __init__(self, play):
         self.play = play
@@ -10,6 +10,9 @@ class BechdelTest():
     # return dictionary with character name as key,
     #    gender (M / F) as key
     def _get_genders(self):
+        char_list = self.play.getElementsByTagName("person")
+        for char in char_list:
+            pass
         # TODO: read in list from play, parse by gender
         return {}
 
