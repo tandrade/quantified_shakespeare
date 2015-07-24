@@ -44,6 +44,12 @@ class BechdelTest():
         scenes = self.play.data.getElementsByTagName("div2")
         totals = []
         character_gender_map = self._get_genders()
+
+        ## Part 1: how many female characters do these plays have?
+        women = [g == "2" for g in character_gender_map.values()]
+        print self.play.title
+        print women.count(True)
+
         # scene_breakdowns = []
         # for scene in scenes:
         #     speaker_list = []

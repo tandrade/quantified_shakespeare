@@ -11,7 +11,6 @@ for play, play_data in plays.iteritems():
     b = BechdelTest(p)
     b.analyze()
 
-#
 # p = Play('data/1H4.xml', 'HenryIV Part I', 'history')
 # b = BechdelTest(p)
 # b.analyze()
