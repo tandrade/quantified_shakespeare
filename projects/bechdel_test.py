@@ -1,20 +1,24 @@
 class BechdelTest():
-
-    male = 1
-    female = 2
+    male = "1"
+    female = "2"
 
     def __init__(self, play):
         self.play = play
-        self._analyze()
 
     # return dictionary with character name as key,
     #    gender (M / F) as key
     def _get_genders(self):
-        char_list = self.play.getElementsByTagName("person")
+        gender_map = {}
+        char_list = self.play.data.getElementsByTagName("person")
         for char in char_list:
-            pass
-        # TODO: read in list from play, parse by gender
-        return {}
+            nameObj = char.getElementsByTagName("name")
+            genderObj = char.getElementsByTagName("sex")
+            if nameObj and genderObj:
+                if nameObj[0].childNodes:
+                    name = nameObj[0].childNodes[0].data
+                    gender = genderObj[0].getAttribute("value")
+                    gender_map[name] = gender
+        return gender_map
 
     # given a node, parse the speaker
     def _get_speaker(self, speaker_node):
@@ -36,17 +40,17 @@ class BechdelTest():
         return scene_summary
 
     # Step 1: do women talk to each other?
-    def _analyze(self):
-        scenes = self.play.getElementsByTagName("div2")
+    def analyze(self):
+        scenes = self.play.data.getElementsByTagName("div2")
         totals = []
         character_gender_map = self._get_genders()
-        scene_breakdowns = []
-        for scene in scenes:
-            speaker_list = []
-            speakers = self._parse_scenes(scene)
-            for speaker in speakers:
-                if speaker in character_gender_map:
-                    speaker_list.append(character_gender_map[speaker])
-            scene_breakdowns.append(speaker_list)
+        # scene_breakdowns = []
+        # for scene in scenes:
+        #     speaker_list = []
+        #     speakers = self._parse_scenes(scene)
+        #     for speaker in speakers:
+        #         if speaker in character_gender_map:
+        #             speaker_list.append(character_gender_map[speaker])
+        #     scene_breakdowns.append(speaker_list)
 
 
